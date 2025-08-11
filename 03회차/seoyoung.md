@@ -10,19 +10,23 @@
 
 일례로, 스크립트 로딩 동작이 끝난 후에 이어서 후속 함수를 실행해야 한다고 가정해 보자.
 
+<br>
+
 스크립트 로딩과 같이 환경에 따라 실행 속도가 크게 영향받는 동작은 소요 시간을 정확하게 예측하기 힘들다.
 
 거기다 혹여나 이 후속 실행 함수가 DOM 조작 함수라던가… 하면 스크립트 실행 전에 실행될 경우 높은 확률로 에러가 날 것.
+
+<br>
 
 이럴 땐 스크립트 실행 함수에 콜백으로 후속 함수를 넘겨줘서
 
 스크립트 로딩 → 함수 실행 순으로 실행 순서를 동일하게 보장할 수 있다.
 
-여기까지가 전통적인 ‘콜백’ 비동기 처리 방식.
+여기까지가 전통적인 '콜백' 비동기 처리 방식.
 
 ```jsx
 function loadScript(src, callback) {
-  let script = document.createElement('script');
+  let script = document.createElement("script");
   script.src = src;
 
   script.onload = () => callback(script); // 스크립트가 로드되면 콜백 실행
@@ -31,45 +35,48 @@ function loadScript(src, callback) {
 }
 ```
 
+<br>
+
 그런데 이 후속 함수 후에 실행되어야 하는 후속 함수가 또 있다면?
 
 후속 함수 이후에도 바로 실행되어야 하는 후후속 함수가 있다면?
+
+<br>
 
 후속 함수에 콜백으로 후후속 함수를 전달하고, 후후속 함수에도 후후후속 함수를 콜백으로 전달하고…
 
 이렇게 계속계속 콜백을 넘겨 연쇄적인 비동기 처리를 요하는 작업이 필요할 수 있다.
 
-이런 경우엔 아래와 같이 '콜백 속 콜백’ 형태가 만들어지게 된다.
+이런 경우엔 아래와 같이 '콜백 속 콜백' 형태가 만들어지게 된다.
 
 ```jsx
-loadScript('/my/script.js', function(script) {
-
+loadScript("/my/script.js", function (script) {
   alert(`${script.src} 로딩 성공. 이어서 다음 스크립트 로딩.`);
 
-  loadScript('/my/script2.js', function(script) {
+  loadScript("/my/script2.js", function (script) {
     alert(`두 번째 스크립트 로딩 성공.`);
   });
-
 });
 ```
+
+---
 
 ### 멸망의 피라미드
 
 하지만 위처럼 비동기 동작이 꼬리에 꼬리를 물고… 중첩이 깊어지다 보면 아래와 같은 형국이 됨.
 
 ```jsx
-loadScript('1.js', function(error, script) {
-
+loadScript("1.js", function (error, script) {
   if (error) {
     handleError(error);
   } else {
     // ...
-    loadScript('2.js', function(error, script) {
+    loadScript("2.js", function (error, script) {
       if (error) {
         handleError(error);
       } else {
         // ...
-        loadScript('3.js', function(error, script) {
+        loadScript("3.js", function (error, script) {
           if (error) {
             handleError(error);
           } else {
@@ -77,7 +84,7 @@ loadScript('1.js', function(error, script) {
           }
         });
       }
-    })
+    });
   }
 });
 ```
@@ -88,11 +95,15 @@ loadScript('1.js', function(error, script) {
 
 ↑ 멸망의 피라미드(a.k.a. CB hell)
 
-*멸망의 피라미드 완성*~
+<br>
+
+_멸망의 피라미드 완성_~
 
 들여쓰기로 인해 콜백 함수 블록은 계속계속 오른쪽으로 이동한다.
 
 이후 비동기 동작이 추가될 때마다 중첩 피라미드는 점점 오른쪽으로 커진다.
+
+<br>
 
 가독성이 안 좋은 코드의 대표적 패턴 = 시선의 흐름이 양옆으로 너무 퍼지는 경우인데
 
@@ -100,11 +111,15 @@ loadScript('1.js', function(error, script) {
 
 깊은 중첩 속 블록의 시작과 끝이 어딘지 헤매다가 진이 다 빠질 수 있다.
 
+<br>
+
 예시에는 콜백 함수의 코드가 짧아 체감이 안 될 수 있는데,
 
 콜백 안에 또 조건문 등 블록이 여러 개 들어가고 코드가 길면 가독성은 더욱 극악이 될 것.
 
 (일일히 html 마크업하던 시절을 생각해 보자. `<div>` 속 `<div>` 속 `<div>` … 가 이어지다 보면 아래의 `</div>` 가 무엇을 닫는 태그인지 헷갈리던 것과 비슷한 맥락.)
+
+---
 
 ### 비동기 처리의 새로운 패러다임 - 프라미스
 
@@ -113,6 +128,8 @@ loadScript('1.js', function(error, script) {
 Promise(약속) 라는 이름에서 유추할 수 있듯이,
 
 어떠한 동작 후에 다른 동작을 실행하기로 약속해 놓는 것이다.
+
+<br>
 
 가령 친구 민지와 **3시에 시계탑 앞에서 만난 후 레스토랑에 가는 약속**을 잡았다고 해 보자.
 
@@ -123,9 +140,13 @@ Promise(약속) 라는 이름에서 유추할 수 있듯이,
 // 무사히 만났다면 -> 레스토랑으로 가기
 ```
 
+<br>
+
 그런데 만약 친구가 약속 시간이 다 되어서야 나오지 못하게 되었다고 통보한다면?
 
 그 때부터 다시 계획을 짜야 되고… 아무튼 시간이 붕 뜬 상태가 될 것이다.
+
+<br>
 
 약속이 지켜지지 않았을 때를 대비해서, 미리 약속 실패 시의 계획도 짜 넣어 보자.
 
@@ -135,17 +156,23 @@ Promise(약속) 라는 이름에서 유추할 수 있듯이,
 // 만나지 못했다면(실패) -> 다른 친구 형민에게 연락하기
 ```
 
+<br>
+
 대비책을 미리 짜 놓는다면 최소한 혼자 정처없이 떠도는 시간은 없을 것이다.
 
-여기서 ‘**민지와 만나기**’는 비동기 처리를 위한 **선행 작업**,
+여기서 '**민지와 만나기**'는 비동기 처리를 위한 **선행 작업**,
 
-‘**레스토랑으로 가기**’는 비동기로 실행될 **후속 함수**,
+'**레스토랑으로 가기**'는 비동기로 실행될 **후속 함수**,
 
-‘**형민에게 연락하기**’는 **에러상황 예외 처리**로 보면 된다.
+'**형민에게 연락하기**'는 **에러상황 예외 처리**로 보면 된다.
+
+<br>
 
 프라미스도 이와 같은 맥락이다. 약속을 총괄하는 프라미스 객체 안에는 미래에 대한 약속과 계획이 담겨 있다.
 
 프라미스 객체는 생성자 함수 `Promise` 의 인스턴스로 만들 수 있다.
+
+<br>
 
 위의 시계탑 약속을 바탕으로 프라미스 객체를 만들어 보자.
 
@@ -159,25 +186,29 @@ const promise = new Promise((resolve, reject) => {
 }
 ```
 
+<br>
+
 주목해야 할 점이 두 가지 있다.
 
+<br>
+
 - 인수로 넘겨지는 `resolve` , `reject` → 무조건 둘 중 하나만 실행된다.
-    - `resolve(value)` : `value` 를 약속 이행 결과로 저장함과 동시에 프라미스 객체의 상태를 이행됨(fulfilled) 상태로 전환한다.
-    - `reject(error)` : `error` 를 에러 객체로 저장함과 동시에 프라미스 객체의 상태를 거부됨(rejected) 상태로 전환한다.
-        
-        ![njsq745frmce33fno (1).svg](https://i.imgur.com/zmi19RV.png)
-        
+  - `resolve(value)` : `value` 를 약속 이행 결과로 저장함과 동시에 프라미스 객체의 상태를 이행됨(fulfilled) 상태로 전환한다.
+  - `reject(error)` : `error` 를 에러 객체로 저장함과 동시에 프라미스 객체의 상태를 거부됨(rejected) 상태로 전환한다.
+    ![njsq745frmce33fno (1).svg](https://i.imgur.com/zmi19RV.png)
+
+<br>
+
 - 만들어진 인스턴스 `promise` 의 내부 구조?
-    
-    일부만 떼와 보자면 아래와 같다.
-    
-    ```jsx
-    Promise {
-    	[[PromiseState]]: "pending" | "fulfilled" | "rejected",
-    	[[PromiseResult]] : '레스토랑으로 가기',
-    	// ...
-    }
-    ```
+  일부만 떼와 보자면 아래와 같다.
+  ```jsx
+  Promise {
+  	[[PromiseState]]: "pending" | "fulfilled" | "rejected",
+  	[[PromiseResult]] : '레스토랑으로 가기',
+  	// ...
+  }
+  ```
+    <br>
     
     - `[[PromiseState]]`
         
@@ -188,12 +219,16 @@ const promise = new Promise((resolve, reject) => {
         | **pending** | 비동기 처리 수행 전 | 프로미스 생성 직후 |
         | **fulfilled** | 비동기 처리 수행 후(성공, 이행됨) | `resolve` 함수 호출 |
         | **rejected** | 비동기 처리 수행 후(실패, 거부됨) | `reject` 함수 호출 |
+        
+    <br>
+        
     - `[[PromiseResult]]`
         
         성공(fulfilled) 시에 반환될 값이 담긴다.
         
         `any` 타입으로, 어떤 형태의 데이터라도 들어갈 수 있다.
-        
+
+---
 
 ### 프라미스 후속 처리 메서드
 
@@ -203,69 +238,86 @@ const promise = new Promise((resolve, reject) => {
 
 왜냐? 비동기 처리가 끝나야만 진짜 데이터가 반환되기 때문.
 
+<br>
+
 즉 프라미스 객체는 데이터가 담겨 있을 수도, 없을 수도 있는 슈뢰딩거의 상자와 같다. 비동기 처리가 끝나고 뚜껑이 열리는 시점에야만 내용물을 확인할 수 있다.
 
+<br>
+
 이 때문에 프라미스 객체는 뚜껑이 열리는 시점에 상자의 내용물을 가지고 작업할 수 있도록 설계된 후속 처리 메서드를 가진다.
-(프라미스에 의해 제작된 코드를 소비하는 ‘소비 메서드’라고도 한다.)
+(프라미스에 의해 제작된 코드를 소비하는 '소비 메서드'라고도 한다.)
+
+<br>
 
 해당 메서드들의 반환값 역시 모두 프라미스 객체이기 때문에,
 
 소비 메서드의 반환값들도 소비 메서드로만 가공 가능하다.(체이닝)
 
+<br>
+
 이 메서드들은 프라미스 객체의 생성자인 `Promise` 함수의 프로토타입에서 상속된 메서드기 때문에 모든 프라미스 객체에 내장되어 있다.
 
+<br>
+
 1. `.then(성공 시 실행될 함수, 실패 시 실행될 함수)`
-    
-    프라미스에서 가장 중요하며 기본이 되는 메서드.
-    
-    매개변수로 두 개의 콜백을 가지며, 앞에서부터 ‘성공 시 실행될 함수’, ‘실패 시 실행될 함수’를 나타낸다.
-    
-    즉 프라미스 객체의 state가 “fulfilled”일 땐 앞의 콜백, “rejected”일 땐 두 번째 콜백이 실행된다.
-    
-    이 때문에 성공 시 연쇄 동작과 실패 시 에러 핸들링까지 한 번에 지정할 수 있는 메서드.
-    
-    다만 두 번째 인자의 경우 후술할 에러 핸들링 전용 `.catch` 메서드의 존재로 잘 쓰진 않는다.
-    
-    ```jsx
-    let promise = new Promise(function(resolve, reject) {
-    	if (대충 성공조건) {
-    	  setTimeout(() => resolve("성공!"), 1000);
-    	} else {
-    	  setTimeout(() => reject(new Error("에러 발생!")), 1000);
-    	}
-    });
-    
-    promise.then(
-      result => alert(result), // 성공 시 -> 1초 후 "완료!" 출력
-      error => alert(error) // 실패 시 -> 1초 후 "Error: 에러 발생!" 출력
-    );
-    ```
-    
-2. `.catch(실패 시 실행될 함수)` 
-    
-    프라미스 객체의 state가 “rejected”일 때의 상황을 핸들링하는 메서드.
-    
-    `.then(null, 실패 시 실행될 함수)` 와 완벽하게 같은 동작을 한다.
-    
-    일반적으론 `then` 에는 성공 시 콜백만, `catch` 에 실패 시 콜백을 넣어 성공/실패 후속 작업을 설계한다.
-    
-    ```jsx
-    let promise = new Promise((resolve, reject) => {
-      setTimeout(() => reject(new Error("에러 발생!")), 1000);
-    });
-    
-    // .catch(f)는 promise.then(null, f)과 동일하게 작동
-    promise.catch(alert); // 실패 시 -> 1초 후 "Error: 에러 발생!" 출력
-    ```
-    
-3. `.finally` 
-    
-    앞선 프라미스의 상태에 관계없이 항상 꼭 실행되어야 할 후속 작업이 들어간다.
-    
-    해당 메서드는 프라미스의 성공/실패 여부를 모르고 알 필요도 없기 때문에 인자를 따로 가지지 않음.
-    
-    때문에, `finally` 는 다음 메서드에 프라미스의 결과와 에러를 가공하지 않고 ‘그대로’ 전달한다.
-    
+
+   프라미스에서 가장 중요하며 기본이 되는 메서드.
+
+   매개변수로 두 개의 콜백을 가지며, 앞에서부터 '성공 시 실행될 함수', '실패 시 실행될 함수'를 나타낸다.
+
+   즉 프라미스 객체의 state가 "fulfilled"일 땐 앞의 콜백, "rejected"일 땐 두 번째 콜백이 실행된다.
+
+   <br>
+
+   이 때문에 성공 시 연쇄 동작과 실패 시 에러 핸들링까지 한 번에 지정할 수 있는 메서드.
+
+   다만 두 번째 인자의 경우 후술할 에러 핸들링 전용 `.catch` 메서드의 존재로 잘 쓰진 않는다.
+
+   ```jsx
+   let promise = new Promise(function(resolve, reject) {
+   	if (대충 성공조건) {
+   	  setTimeout(() => resolve("성공!"), 1000);
+   	} else {
+   	  setTimeout(() => reject(new Error("에러 발생!")), 1000);
+   	}
+   });
+
+   promise.then(
+     result => alert(result), // 성공 시 -> 1초 후 "완료!" 출력
+     error => alert(error) // 실패 시 -> 1초 후 "Error: 에러 발생!" 출력
+   );
+   ```
+
+<br>
+
+2. `.catch(실패 시 실행될 함수)`
+
+   프라미스 객체의 state가 "rejected"일 때의 상황을 핸들링하는 메서드.
+
+   `.then(null, 실패 시 실행될 함수)` 와 완벽하게 같은 동작을 한다.
+
+   일반적으론 `then` 에는 성공 시 콜백만, `catch` 에 실패 시 콜백을 넣어 성공/실패 후속 작업을 설계한다.
+
+   ```jsx
+   let promise = new Promise((resolve, reject) => {
+     setTimeout(() => reject(new Error("에러 발생!")), 1000);
+   });
+
+   // .catch(f)는 promise.then(null, f)과 동일하게 작동
+   promise.catch(alert); // 실패 시 -> 1초 후 "Error: 에러 발생!" 출력
+   ```
+
+<br>
+
+3. `.finally`
+
+   앞선 프라미스의 상태에 관계없이 항상 꼭 실행되어야 할 후속 작업이 들어간다.
+
+   해당 메서드는 프라미스의 성공/실패 여부를 모르고 알 필요도 없기 때문에 인자를 따로 가지지 않음.
+
+   때문에, `finally` 는 다음 메서드에 프라미스의 결과와 에러를 가공하지 않고 '그대로' 전달한다.
+
+---
 
 ### 프라미스 체이닝
 
@@ -273,54 +325,57 @@ const promise = new Promise((resolve, reject) => {
 
 이 역시 후속 처리 메서드로만 가공 가능하다고 설명한 바 있다.
 
+<br>
+
 코드로 나타내면 `promise.then(){...}.finally{...}.catch(){...}...` 뭐 이런 형태가 될텐데
 
 이런 식으로 메서드의 반환값을 다음 메서드에 넘겨주고 그 반환값을 다음 메서드에 넘겨주고.. 하며 연결시키는 것을 프라미스 체이닝이라고 한다.
+
+<br>
 
 코드 예시로 보면 아래와 같은 흐름이다.
 
 (아까의 콜백 헬과는 다르게 시선이 아래로만 진행돼 가독성이 개선된 것을 볼 수 있다!)
 
 ```jsx
-new Promise(function(resolve, reject) {
-
+new Promise(function (resolve, reject) {
   setTimeout(() => resolve(1), 1000);
-
-}).then(function(result) { 
-
-  alert(result); // 1
-  return result * 2;
-
-}).then(function(result) { 
-
-  alert(result); // 2
-  return result * 2;
-
-}).then(function(result) {
-
-  alert(result); // 4
-  return result * 2;
-
-});
+})
+  .then(function (result) {
+    alert(result); // 1
+    return result * 2;
+  })
+  .then(function (result) {
+    alert(result); // 2
+    return result * 2;
+  })
+  .then(function (result) {
+    alert(result); // 4
+    return result * 2;
+  });
 ```
 
 위 예시에서 `result` 는 핸들러 체인을 따라 계속 다음 메서드로 전달되며 가공된다.
 
 ![7rk9r2ywplmcejed2z (1).svg](https://i.imgur.com/xlHNWDp.png)
 
+<br>
+
 ```
 시계탑에서 민지를 만난다
 
-만약 실패 시(catch) -> 형민에게 연락한다 ( “Error : 민지 감기” )
+만약 실패 시(catch) -> 형민에게 연락한다 ( "Error : 민지 감기" )
 
 그리고(then) -> 레스토랑에 간다
 그리고(then) -> 스테이크를 시킨다
 그리고(then) -> 빙수를 먹는다
 
-만약 실패 시(catch) -> 커피를 먹는다 ( “Error : 빙수 품절” )
+만약 실패 시(catch) -> 커피를 먹는다 ( "Error : 빙수 품절" )
 
 마지막으로(finally) -> 약국에 간다 ( 집 들어가기 전 무조건 실행 )
 ```
+
+<br>
 
 이런 식으로 계속 연결하면 된다.
 
@@ -328,42 +383,45 @@ new Promise(function(resolve, reject) {
 
 에러 분기에 따라 가공된 결과가 아래로 전파됨에 주목하자.
 
+<br>
+
 만약 민지가 안 와서 형민에게 연락한다면 형민과 스테이크를 시키고 빙수를 먹게 될 것이다.
+
+---
 
 ### 프라미스의 정적 메서드
 
 후속 처리 메서드 외에도 `Promise.prototype` 은 여러 정적 메서드를 가진다.
 
-* 여기서 정적 메서드란! 인스턴스의 프로토타입 체인에 들어가지 않고 생성자 함수or클래스 그 자체에만 붙어있는 메서드를 뜻한다.
+\* 여기서 정적 메서드란! 인스턴스의 프로토타입 체인에 들어가지 않고 생성자 함수or클래스 그 자체에만 붙어있는 메서드를 뜻한다.
+
+<br>
 
 - `Promise.resolve` / `Promise.reject`
-    
-    새로운 프라미스를 만듬과 동시에 즉시 `resolve` / `reject` 상태로 만드는 메서드.
-    
-    이미 존재하며 성공/실패 여부가 정해진 값을 래핑할 때 사용된다.
-    
+  새로운 프라미스를 만듬과 동시에 즉시 `resolve` / `reject` 상태로 만드는 메서드.
+  이미 존재하며 성공/실패 여부가 정해진 값을 래핑할 때 사용된다.
+
+<br>
+
 - `Promise.all`
-    
-    여러 프라미스 객체를 병렬로 처리 가능한 메서드.
-    
-    프라미스 객체들로 이루어진 배열 등 이터러블(순회 가능한 ㅡ `Symbol.iterator` 를 가진 ㅡ 객체)을 인수로 전달받음.
-    
-    전달받은 모든 프라미스가 “fulfilled” 상태가 되면 모든 처리 결과를 배열에 저장 후 새 프라미스를 반환한다.
-    
+  여러 프라미스 객체를 병렬로 처리 가능한 메서드.
+  프라미스 객체들로 이루어진 배열 등 이터러블(순회 가능한 ㅡ `Symbol.iterator` 를 가진 ㅡ 객체)을 인수로 전달받음.
+  전달받은 모든 프라미스가 "fulfilled" 상태가 되면 모든 처리 결과를 배열에 저장 후 새 프라미스를 반환한다.
+
+<br>
+
 - `Promise.race`
-    
-    프라미스로 이루어진 이터러블을 인수로 전달받음.
-    
-    모든 프라미스가 이행될 때까지 기다리는 `all` 과 다르게,
-    
-    가장 먼저 이행된 프라미스의 처리 결과를 `resolve` 하는 새로운 프라미스를 반환한다.
-    
+  프라미스로 이루어진 이터러블을 인수로 전달받음.
+  모든 프라미스가 이행될 때까지 기다리는 `all` 과 다르게,
+  가장 먼저 이행된 프라미스의 처리 결과를 `resolve` 하는 새로운 프라미스를 반환한다.
+
+<br>
+
 - `Promise.allSettled`
-    
-    프라미스로 이루어진 이터러블을 인수로 전달받음.
-    
-    전달받은 프라미스가 모두 settled(수행) 상태가 되면 처리 결과를 배열로 반환한다.
-    
+  프라미스로 이루어진 이터러블을 인수로 전달받음.
+  전달받은 프라미스가 모두 settled(수행) 상태가 되면 처리 결과를 배열로 반환한다.
+
+---
 
 ### 마이크로태스크 큐
 
@@ -371,9 +429,13 @@ new Promise(function(resolve, reject) {
 
 이는 앞서 배운 비동기 콜백 처리 공간인 태스크 큐(= **매크로태스크 큐(macrotask queue)**) 와 구분됨**.**
 
+<br>
+
 마이크로태스크 큐는 태스크 큐보다 작업 우선순위가 높아 먼저 실행된다.
 
 ![이미지](https://i.imgur.com/HIrmYNF.png)
+
+---
 
 ### fetch
 
@@ -383,9 +445,13 @@ HTTP 요청 전송 기능을 제공하는 비동기 API이다.
 
 (Node 18 이상에선 Node.js에서도 지원하게 됨)
 
+<br>
+
 콜백 기반이던 `XMLHttpRequest` 와는 다르게 프라미스 기반이라 가독성이 좋으며
 
 모던한 문법이기 때문에 통신의 경우 이 API가 표준이 되었다고 보면 됨.
+
+<br>
 
 문법은 아래와 같다.
 
@@ -393,11 +459,15 @@ HTTP 요청 전송 기능을 제공하는 비동기 API이다.
 const promise = fetch(url, [, options]);
 ```
 
+<br>
+
 `fetch` 함수의 인자에는 요청을 보낼 HTTP url과
 
 옵션 객체(메서드 종류, 헤더, 페이로드 등 통신에 필요한 정보들을 프로퍼티로 가짐)를 선택적으로 전달한다.
 
 반환값은 프라미스 객체이므로 당연히 프라미스 메서드로 체이닝이 가능하다.
+
+---
 
 ## 2. 제너레이터와 async/await
 
@@ -407,59 +477,61 @@ const promise = fetch(url, [, options]);
 
 반환값은 제너레이터 객체이며, 이 객체는 **이터러블이면서 동시에 이터레이터**이다.
 
+<br>
+
 즉! 제너레이터 = 이터레이터를 표현식의 연속으로 쉽게 찍어낼 수 있는 함수.
 
 아래와 같이 선언 시 `function` 뒤에 애스터리스크를 붙여 제너레이터 함수임을 나타낸다.
 
 ```jsx
 function* gen() {
-  console.log('start');
-  const x = yield 1;       // ① 1을 바깥에 내보내고 잠깐 멈춤
-  console.log('got', x);   // ③ 바깥에서 보낸 값을 x로 받음
-  yield 2;                 // ④ 또 멈춤
-  return 3;                // ⑤ done: true로 종료
+  console.log("start");
+  const x = yield 1; // ① 1을 바깥에 내보내고 잠깐 멈춤
+  console.log("got", x); // ③ 바깥에서 보낸 값을 x로 받음
+  yield 2; // ④ 또 멈춤
+  return 3; // ⑤ done: true로 종료
 }
 ```
 
 - `yield` : 중단점. 위 코드는 `next` 메서드를 실행할 때마다 순차적으로 `yield` → `yield` → `return` 문의 값이 반환된다.
 
+---
+
 ### 이터러블/이터레이터
 
 - **이터러블(iterable)**
-    
-    자료를 반복할 수 있는 객체를 일컫는다. 즉, `for..of` 반복문에 적용 가능한 객체.
-    
-    이터러블 객체는 `Symbol.iterator` 라는 특수한 심볼을 참조하며 이터레이터를 반환한다.
-    
-    대표적으로 배열, 문자열, Set, Map, TypedArray 등등이 있음.
-    
+  자료를 반복할 수 있는 객체를 일컫는다. 즉, `for..of` 반복문에 적용 가능한 객체.
+  이터러블 객체는 `Symbol.iterator` 라는 특수한 심볼을 참조하며 이터레이터를 반환한다.
+  대표적으로 배열, 문자열, Set, Map, TypedArray 등등이 있음.
+
+<br>
+
 - **이터레이터(iterator)**
-    
-    이터러블 객체를 순회할 때 실제로 사용되는 반복 제어 장치.
-    
-    `next()` 메서드를 가지며, 이 `next` 메서드를 호출해 다음 값으로 넘어가는 순회가 가능하다.
-    
-- next 메서드
-    
-    다음 값으로 넘어갈 때 호출되는 메서드.
-    
-    `{done: Boolean, value: any}` 형태의 객체를 반환한다.
-    
-    객체의 마지막 값이라면 `done: true` , `value: undefined` 가 된다.
-    
-    ```jsx
-    const arr = [1,2,3]; //arr는 그냥 평범한 배열
-    const iter = arr[Symbol.iterator](); // arr에 이터레이터 심볼 추가
-    
-    iter.next()
-    //>{value:1,done: false}
-    iter.next()
-    //>{value:2, done: false},
-    iter.next()
-    //{value:3, done: false}
-    iter.next()
-    //{value: undefined, done: true}
-    ```
+  이터러블 객체를 순회할 때 실제로 사용되는 반복 제어 장치.
+  `next()` 메서드를 가지며, 이 `next` 메서드를 호출해 다음 값으로 넘어가는 순회가 가능하다.
+
+<br>
+
+- **next 메서드**
+  다음 값으로 넘어갈 때 호출되는 메서드.
+  `{done: Boolean, value: any}` 형태의 객체를 반환한다.
+  객체의 마지막 값이라면 `done: true` , `value: undefined` 가 된다.
+
+  ```jsx
+  const arr = [1, 2, 3]; //arr는 그냥 평범한 배열
+  const iter = arr[Symbol.iterator](); // arr에 이터레이터 심볼 추가
+
+  iter.next();
+  //>{value:1,done: false}
+  iter.next();
+  //>{value:2, done: false},
+  iter.next();
+  //{value:3, done: false}
+  iter.next();
+  //{value: undefined, done: true}
+  ```
+
+    <br>
     
     이터러블 객체에 `for..of` 반복을 돌리면 다음과 같은 과정이 일어난다.
     
@@ -468,46 +540,64 @@ function* gen() {
     3. 한 요소(인덱스, 프로퍼티…)를 처리하면 다음 값을 얻기 위해 이터레이터의 `next()` 메서드를 호출한다.
     4. `next()` 메서드 반환 객체의 `done` 이 `true` 가 될 때까지 반복한다.
 
+---
+
 ### 제너레이터의 특징
 
-1. 제너레이터 객체의 메서드
-    
-    `return` 과 `throw` 는 제너레이터 객체 자체적으로 가지는 메서드.
-    
-    - `next(value)`
-        
-        다음 `yield` 문까지 코드를 실행하고 반환된 값을 `value` 에 저장한다.
-        
-        반환 객체 : `{ value: yield값, done: false }`
-        
-    - `return(value)`
-        
-        인수로 전달받은 값을 객체의 `value` 에 저장하고 순회를 즉시 종료한다.
-        
-        반환 객체 : `{ value: value, done: true }`
-        
-    - `throw(error)`
-        
-        현 위치에 예외를 던짐. `catch` 로 처리 가능.
-        
-2. 순회 위임 가능
-    
-    제너레이터 함수는 다른 이터러블/제너레이터에 반복을 위임하는 것이 가능하다.
-    
-    `yield*` 형태로 표시 후 제너레이터를 쓰면 해당 제너레이터의 `yield` 문으로 넘어가 순차 실행된다.
-    
-    ```jsx
-    function* sub() { yield 2; yield 3; }
-    function* main() { yield 1; yield* sub(); yield 4; }
-    console.log([...main()]); // [1,2,3,4]
-    ```
-    
-3. 함수 제어권이 호출자에게 있음
-    
-    제너레이터 함수는 `next` 메서드를 호출하기 전까진 `yield` 문에 일시중지(pause) 된 상태이므로, 중단 지점의 변수, 스코프, 실행 위치 등이 그대로 저장된다.
-    
-    이 때 한 번 호출하면 함수로 제어권이 넘어가는 일반 함수와 다르게 제너레이터는 호출자가 실행 제어가 가능하다는 특징이 있다.
-    
+1. **제너레이터 객체의 메서드**
+
+   `return` 과 `throw` 는 제너레이터 객체 자체적으로 가지는 메서드.
+
+   <br>
+
+   - `next(value)`
+     다음 `yield` 문까지 코드를 실행하고 반환된 값을 `value` 에 저장한다.
+     반환 객체 : `{ value: yield값, done: false }`
+
+   <br>
+       
+   - `return(value)`
+       
+       인수로 전달받은 값을 객체의 `value` 에 저장하고 순회를 즉시 종료한다.
+       
+       반환 객체 : `{ value: value, done: true }`
+       
+   <br>
+       
+   - `throw(error)`
+       
+       현 위치에 예외를 던짐. `catch` 로 처리 가능.
+
+<br>
+
+2. **순회 위임 가능**
+
+   제너레이터 함수는 다른 이터러블/제너레이터에 반복을 위임하는 것이 가능하다.
+
+   `yield*` 형태로 표시 후 제너레이터를 쓰면 해당 제너레이터의 `yield` 문으로 넘어가 순차 실행된다.
+
+   ```jsx
+   function* sub() {
+     yield 2;
+     yield 3;
+   }
+   function* main() {
+     yield 1;
+     yield* sub();
+     yield 4;
+   }
+   console.log([...main()]); // [1,2,3,4]
+   ```
+
+<br>
+
+3. **함수 제어권이 호출자에게 있음**
+
+   제너레이터 함수는 `next` 메서드를 호출하기 전까진 `yield` 문에 일시중지(pause) 된 상태이므로, 중단 지점의 변수, 스코프, 실행 위치 등이 그대로 저장된다.
+
+   이 때 한 번 호출하면 함수로 제어권이 넘어가는 일반 함수와 다르게 제너레이터는 호출자가 실행 제어가 가능하다는 특징이 있다.
+
+---
 
 ### async/await
 
@@ -515,64 +605,68 @@ function* gen() {
 
 전역 등 일반 동기 코드 흐름에서는 가공 불가, 메서드 체이닝을 이용해야만 값을 꺼내 볼 수 있었다.
 
+<br>
+
 이러한 체이닝 방식은 콜백 헬보단 가독성이 좋았지만
 
 체인이 길어질 수록 아래로 코드 블록이 계속 이어지기 때문에 또 최선은 아니라는 의견이 나옴.
 
 ```jsx
 getUser(userId)
-  .then(user => getPosts(user))
-  .then(posts => getComments(posts))
-  .then(comments => console.log(comments))
-  .catch(err => console.error(err));
-  // ...
+  .then((user) => getPosts(user))
+  .then((posts) => getComments(posts))
+  .then((comments) => console.log(comments))
+  .catch((err) => console.error(err));
+// ...
 ```
 
 ↑ 체인 횟수가 많아지면 여전히 읽기 힘든 비동기 코드
 
+<br>
+
 이러한 배경 아래 ES8(2017년),
 
-제너레이터로 비동기 동작을 동기 코드처럼 다룰 수 있게 구현한 처리 방식을
+제너레이터의 개념을 내부적으로 활용해 비동기 동작을 동기 코드처럼 다룰 수 있게 구현한 처리 방식을
 
 **async/await** 라는 표준 문법 감미료로 간소화되어 정식 도입되었다.
 
-- `async` 키워드
+<br>
+
+- **`async` 키워드**
+  함수 선언문/표현식 앞에 붙여 해당 함수가 async(비동기) 함수임을 나타낸다.
+  async 함수는 내부에서 `await` 키워드를 쓸 수 있으며,
+  반환값은 항상 프라미스 객체로 감싸 반환된다.
+
+<br>
+
+- **`await` 키워드**
+  비동기 표현식(주로 프라미스) 앞에 붙일 수 있는 키워드.
+  표현식이 프라미스가 아닐 경우엔 프라미스 객체로 자동 감싸진다.
+  결국 `await` 는 `Promise.resolve(표현식)` 후 `.then` 으로 이를 처리하는 것과 같은 동작을 함.
+  <br>
+  해당 키워드가 붙은 프라미스는 객체가 수행(settled) 상태가 될 때까지(상자 뚜껑이 열릴 때까지) 잠시 대기 상태가 되며 결과가 반환되면 다음 실행 흐름으로 넘어간다.
+  ```jsx
+  async function foo() {
+    const promise = new Promise((resolve, reject) => {
+      setTimeout(() => resolve("완료!"), 1000);
+    });
+
+    const result = await promise; // 프라미스가 이행될 때까지 기다림
+
+    alert(result); // 1초 후 -> "완료!"
+  }
+  ```
+    <br>
     
-    함수 선언문/표현식 앞에 붙여 해당 함수가 async(비동기) 함수임을 나타낸다.
+    상태가 "fulfilled" 일 경우엔 `try` 블록의 다음 구문부터 실행되고
     
-    async 함수는 내부에서 `await` 키워드를 쓸 수 있으며,
+    "rejected" 일 경우엔 에러 `throw` 후 만약 `catch` 절이 있을 경우 실행 흐름이 `catch` 블록으로 넘어간다.
     
-    반환값은 항상 프라미스 객체로 감싸 반환된다.
-    
-- `await` 키워드
-    
-    비동기 표현식(주로 프라미스) 앞에 붙일 수 있는 키워드.
-    
-    표현식이 프라미스가 아닐 경우엔 프라미스 객체로 자동 감싸진다.
-    
-    결국 `await` 는 `Promise.resolve(표현식` 후 `.then` 으로 이를 처리하는 것과 같은 동작을 함.
-    
-    해당 키워드가 붙은 프라미스는 객체가 수행(settled) 상태가 될 때까지(상자 뚜껑이 열릴 때까지) 잠시 대기 상태가 되며 결과가 반환되면 다음 실행 흐름으로 넘어간다.
-    
-    ```jsx
-    async function foo() {
-    
-      const promise = new Promise((resolve, reject) => {
-        setTimeout(() => resolve("완료!"), 1000)
-      });
-    
-      const result = await promise; // 프라미스가 이행될 때까지 기다림
-    
-      alert(result); // 1초 후 -> "완료!"
-    }
-    ```
-    
-    상태가 “fulfilled” 일 경우엔 `try` 블록의 다음 구문부터 실행되고
-    
-    “rejected” 일 경우엔 에러 `throw` 후 만약 `catch` 절이 있을 경우 실행 흐름이 `catch` 블록으로 넘어간다.
+    <br>
     
     ** 여기서 `await` 는 이벤트 루프나 다른 코드 자체를 블로킹하는 것이 아님! async 함수 내부 동작만 잠시 멈출 뿐이다.*
-    
+
+---
 
 ## 3. 에러 핸들링
 
@@ -590,26 +684,28 @@ try {
 } catch (error) {
   // try 블록에서 에러 발생 시 실행되는 코드
 } finally {
-	// 에러 여부와 상관없이 무조건 한 번 실행되는 코드
+  // 에러 여부와 상관없이 무조건 한 번 실행되는 코드
 }
 ```
 
-- `try`
-    
-    실행할 코드 블록. 중간에 에러가 없다면 마지막 줄까지 실행된다.
-    
-- `catch (error)`
-    
-    `try` 블록에서 에러 발생 시 실행되는 코드 블록.
-    
-    에러 정보가 담긴 에러 객체 `error` 를 인수로 가진다.
-    
-    (에러에 대한 자세한 정보가 필요하지 않을 시 인수 생략 가능)
-    
-- `finally`
-    
-    에러 발생 여부에 상관없이 무조건 한 번 실행되는 코드 블록. 생략 가능하다.
-    
+<br>
+
+- **`try`**
+  실행할 코드 블록. 중간에 에러가 없다면 마지막 줄까지 실행된다.
+
+<br>
+
+- **`catch (error)`**
+  `try` 블록에서 에러 발생 시 실행되는 코드 블록.
+  에러 정보가 담긴 에러 객체 `error` 를 인수로 가진다.
+  (에러에 대한 자세한 정보가 필요하지 않을 시 인수 생략 가능)
+
+<br>
+
+- **`finally`**
+  에러 발생 여부에 상관없이 무조건 한 번 실행되는 코드 블록. 생략 가능하다.
+
+---
 
 ### Error 객체
 
@@ -618,8 +714,10 @@ try {
 이 때 인수로 문자열을 넘겨주면 에러 메세지를 명시 가능하다.
 
 ```jsx
-const error = new Error('에러 메세지');
+const error = new Error("에러 메세지");
 ```
+
+<br>
 
 위처럼 만든 에러 객체는 내부적으로 아래와 같은 형태를 가진다.(개념적으로)
 
@@ -635,11 +733,17 @@ Error {
 }
 ```
 
-- `name` : 에러명. 객체를 만든 생성자 함수의 이름이 자동으로 할당된다.
-- `message` : 에러의 상세 내용을 담고 있는 문자열 메세지. 인수로 넘겨 지정 가능.
-- `stack` : 대부분 호스트 환경(엔진)에서 지원하는 비표준 프로퍼티. 현재 호출 스택을 나타내며 에러를 유발한 중첩 호출들의 순서 정보를 가진 문자열이다. 어디서 에러가 발생했는가? 를 추적하는 정보.
+<br>
+
+- **`name`** : 에러명. 객체를 만든 생성자 함수의 이름이 자동으로 할당된다.
+- **`message`** : 에러의 상세 내용을 담고 있는 문자열 메세지. 인수로 넘겨 지정 가능.
+- **`stack`** : 대부분 호스트 환경(엔진)에서 지원하는 비표준 프로퍼티. 현재 호출 스택을 나타내며 에러를 유발한 중첩 호출들의 순서 정보를 가진 문자열이다. 어디서 에러가 발생했는가? 를 추적하는 정보.
+
+<br>
 
 또한 에러 객체를 문자열로 변환하면(내장 `toString` 에 의해) `name: message` 형태로 출력된다.
+
+<br>
 
 에러 객체를 만든 생성자 함수의 이름이 에러명에 할당된다고 했는데,
 
@@ -647,27 +751,35 @@ Error {
 
 해당 함수들은 모두 에러 클래스의 기본형인 `Error` 를 상속받는다.
 
+<br>
+
 이를 통해 우리는 직접 커스텀 에러 객체를 만들어 처리할 수 있다.
+
+<br>
 
 **↓ 에러 클래스 종류**
 
-| 생성자 함수(클래스) | 인스턴스 |
-| --- | --- |
-| **Error** | 일반적인 에러 객체이자 모든 에러 클래스들에<br>에러 관련 메서드/필드를 상속하는 슈퍼 클래스. |
-| **SyntaxError** | 문법 에러 |
-| **ReferenceError** | 참조 에러 |
-| **TypeError** | 데이터 타입 에러 |
-| **RangeError** | 숫자형 범위 초과 에러 |
-| **URIError** | URI 부적절한 인수 전달 에러 |
-| **EvalError** | eval 함수 에러 |
+| 생성자 함수(클래스) | 인스턴스                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| **Error**           | **일반적인 에러 객체이자<br>모든 에러 클래스들에 에러 관련 메서드/필드를 상속하는 슈퍼 클래스.** |
+| **SyntaxError**     | 문법 에러                                                                                        |
+| **ReferenceError**  | 참조 에러                                                                                        |
+| **TypeError**       | 데이터 타입 에러                                                                                 |
+| **RangeError**      | 숫자형 범위 초과 에러                                                                            |
+| **URIError**        | URI 부적절한 인수 전달 에러                                                                      |
+| **EvalError**       | eval 함수 에러                                                                                   |
+
+---
 
 ### 직접 에러 던지기 - throw 문
 
-문법이나 구조적으로 엔진이 ‘에러’라고 인식하진 않지만
+문법이나 구조적으로 엔진이 '에러'라고 인식하진 않지만
 
 개발자 입장에서 에러로 간주할 수 있는 상황,
 
 혹은 차후 치명적인 에러로 번질 수 있는 상황에는 에러 객체를 직접 만들어 `throw` 하면 된다.
+
+<br>
 
 에러를 던진 후엔 `throw` 문 다음 줄의 코드들도 중단 없이 정상 실행되며,
 
@@ -677,39 +789,49 @@ Error {
 throw <error object>
 ```
 
+---
+
 ### 에러 전파
 
 가까운 `catch` 블록에서도 처리하지 못한 에러 객체는 계속 해결되지 않은 채 처리 가능한 블록을 만날 때까지 상위로 전파된다.
+
+<br>
 
 이는 호출자 방향으로 전파된다고도 표현할 수 있는데,
 
 함수 속에서 함수가 호출될 경우 최하위에서 발생한 에러가 최상위 함수(최종 호출자)까지 전파되기 때문.
 
+<br>
+
 만약 에러가 잡히지 않고 최종 호출자인 프로그램까지 전파되면 그대로 프로그램이 종료된다.
 
 ```jsx
 const foo = () => {
-	throw Error('foo에서 발생한 에러');
+  throw Error("foo에서 발생한 에러");
 };
 
 const bar = () => {
-	foo();
+  foo();
 };
 
 const baz = () => {
-	bar();
+  bar();
 };
 
 try {
-	baz();
+  baz();
 } catch (err) {
-	console.error(err); // Error: foo에서 발생한 에러
+  console.error(err); // Error: foo에서 발생한 에러
 }
 ```
+
+<br>
 
 위 예시에선 `foo` 에서 발생해 던져진 에러 객체가 `bar` → `baz` 를 지나 전파되다가 결국 `catch` 블록을 만나 처리된다.
 
 이로써 호출자에서 하위 함수들의 에러를 한 번에 잡아 유연하게 처리하는 방식이 가능.
+
+---
 
 ### 비동기 함수의 에러 전파
 
@@ -717,57 +839,63 @@ try {
 
 호출자가 없기 때문에 에러의 전파/처리 방식이 약간 다르다.
 
-1. 콜백 내부 발생 에러
-    
-    콜백 안에서 던진 에러는 별개의 비동기 처리 큐에 저장되기 때문에
-    
-    동기 처리되는 바깥 `try..catch` 에서는 잡지 못한다. (`throw` 보다 `catch` 가 먼저 실행되기 때문)
-    
-    따라서 콜백마다 내부에 `catch` 문을 구현해 놓아야 함.
-    
-    콜백 비동기 처리 방식이 사장된 이유에는 이처럼 번거로운 에러 처리 방식 때문도 있다.
-    
-    ```jsx
-    try {
-      setTimeout(() => {
-        throw new Error("콜백 내부 에러");
-      }, 0);
-    } catch (err) {
-      console.error("에러: ", err); // 여기선 콜백이 던진 에러를 잡지 못한다.
-    }
-    ```
-    
-2. 프라미스 객체 발생 에러
-    
-    프라미스 객체를 처리하는 후속 메서드 중 발생한(혹은 던진) 에러는 메서드 체인을 따라 전파된다.
-    
-    전파된 에러는 에러 발생 하단 내에서 가까운 `catch` 문에서 잡을 수 있다.
-    
-    ```jsx
-    promise.resolve()
-    	.then(() => throw new Error('프라미스 처리 에러'))
-    	.then(() => console.log('실행X'))
-    	.catch(err => console.error(err))
-    	// Error: 프라미스 처리 에러
-    ```
-    
-3. async 함수 내부 발생 에러
-    
-    async 함수 내부에선 비동기 작업이 동기 코드처럼 실행되므로
-    
-    바깥 `try..catch` 문으로 비동기 동작의 모든 에러를 잡아 처리할 수 있다.
-    
-    ```jsx
-    async function foo() {
-      try {
-        const response = await fetch('http://유효하지-않은-주소');
-        const user = await response.json();
-      } catch(err) {
-        console.error(err); // 에러 잡음 -> TypeError: failed to fetch
-      }
-    }
-    ```
+<br>
 
----
+1. **콜백 내부 발생 에러**
 
-[원본 Notion 링크](https://alder-xylocarp-edb.notion.site/Deep-Dive-23e3aeb203158037b942db7658010e4b?source=copy_link)
+   콜백 안에서 던진 에러는 별개의 비동기 처리 큐에 저장되기 때문에
+
+   동기 처리되는 바깥 `try..catch` 에서는 잡지 못한다. (`throw` 보다 `catch` 가 먼저 실행되기 때문)
+
+   따라서 콜백마다 내부에 `catch` 문을 구현해 놓아야 함.
+
+   <br>
+
+   콜백 비동기 처리 방식이 사장된 이유에는 이처럼 번거로운 에러 처리 방식 때문도 있다.
+
+   ```jsx
+   try {
+     setTimeout(() => {
+       throw new Error("콜백 내부 에러");
+     }, 0);
+   } catch (err) {
+     console.error("에러: ", err); // 여기선 콜백이 던진 에러를 잡지 못한다.
+   }
+   ```
+
+<br>
+
+2. **프라미스 객체 발생 에러**
+
+   프라미스 객체를 처리하는 후속 메서드 중 발생한(혹은 던진) 에러는 메서드 체인을 따라 전파된다.
+
+   전파된 에러는 에러 발생 하단 내에서 가까운 `catch` 문에서 잡을 수 있다.
+
+   ```jsx
+   Promise.resolve()
+     .then(() => {
+       throw new Error("프라미스 처리 에러");
+     })
+     .then(() => console.log("실행X"))
+     .catch((err) => console.error(err));
+   // Error: 프라미스 처리 에러
+   ```
+
+<br>
+
+3. **async 함수 내부 발생 에러**
+
+   async 함수 내부에선 비동기 작업이 동기 코드처럼 실행되므로
+
+   바깥 `try..catch` 문으로 비동기 동작의 모든 에러를 잡아 처리할 수 있다.
+
+   ```jsx
+   async function foo() {
+     try {
+       const response = await fetch("http://유효하지-않은-주소");
+       const user = await response.json();
+     } catch (err) {
+       console.error(err); // 에러 잡음 -> TypeError: failed to fetch
+     }
+   }
+   ```
